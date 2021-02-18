@@ -1,5 +1,6 @@
 const $onlySpans = document.querySelectorAll("span")
 const $documentScreen = document.getElementById("screen")
+
 let storedValue
 let storedOperator
 let runningTotal
@@ -8,37 +9,61 @@ $onlySpans.forEach( span => {
     span.addEventListener( "click", buttonActions )
 })
 
-function buttonActions(event) {
-    const buttonValue = event.target.innerText
-    console.log(buttonValue)
+$documentScreen.addEventListener( 'input' , event => {
+    screenText = event.target.value
+    lastCharacter = screenText.charAt(screenText.length - 1)
+    if (isNaN(lastCharacter)) {
+        $documentScreen.value = dropLastCharacter(screenText)
+        evaluateCharacter(lastCharacter)
+    }
+})
 
-    if ( buttonValue === "C" ) {
+function evaluateCharacter(character) {
+    if ( character === "c" || character === "C" ) {
         clearScreen()
-    } else if ( ["+", "-", "x", "÷"].includes(buttonValue) ) {
-        performOperation( buttonValue )
-    } else if ( buttonValue === "=" ) {
+    } else if ( ["+", "-", "x", "÷"].includes( character ) ) {
+        performOperation( character )
+    } else if ( character === "=" ) {
         calculateTotal()
-    } else {
-        if ( $documentScreen.innerText == runningTotal ) {
+    } else if ( /[0-9]/.test(character) ) {
+        if ( $documentScreen.value == runningTotal ) {
             clearScreen()
         } else if ( storedOperator ) {
             clearScreen()
         }
-        $documentScreen.append( buttonValue )
+        $documentScreen.value += character
     }
+}
+
+function buttonActions(event) {
+    const buttonValue = event.target.innerText
+    evaluateCharacter(buttonValue)
+}
+
+function dropLastCharacter(string) {
+    return string.substring(0, string.length - 1)
 }
 
 function clearScreen() {
-    $documentScreen.textContent = ""
+    if ( $documentScreen.value === "" ) {
+        clearAll()
+    }
+    $documentScreen.value = ""
 }
 
-function performOperation(buttonValue) {
+function clearAll() {
+    runningTotal = 0
+    storedValue = 0
+    storedOperator = ""
+}
+
+function performOperation(operator) {
     if ( storedValue ) {
         storedValue = calculateTotal()
     } else {
-        storedValue = +$documentScreen.innerText
+        storedValue = $documentScreen.value
     }
-    storedOperator = buttonValue
+    storedOperator = operator
 }
 
 function calculateTotal() {
@@ -59,21 +84,21 @@ function calculateTotal() {
 }
 
 function updateTotal(operation) {
-    let currentValue = $documentScreen.innerText
+    let currentValue = $documentScreen.value
     clearScreen()
 
     updatedValue = [storedValue, currentValue].reduce(operation)
-
-    console.log("stored value 1", storedValue)
-    console.log("current value 1", currentValue)
-    console.log("stored operator 1", storedOperator)
-    console.log("updated value 1", updatedValue)
-
+    
     if ( updatedValue === Infinity || currentValue === "Error" ) {
-        $documentScreen.innerText = "Error"
+        $documentScreen.value = "Error"
         updatedValue = 0
     } else {
-        $documentScreen.innerText = updatedValue
+        $documentScreen.value = updatedValue
+        runningTotal = updatedValue
+        storedValue = 0
     }
     return updatedValue
 }
+
+console.log("done")
+
